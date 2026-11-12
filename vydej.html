@@ -1,0 +1,213 @@
+
+
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KRYŠTOF FOOD – VÝDEJ</title>
+<style>
+:root{--y:#ffc20a;--bg:#101010;--panel:#202020;--green:#25d878;--muted:#aaa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:white;font-family:Arial,sans-serif}
+header{
+ background:#080808;border-bottom:5px solid var(--y);
+ padding:18px 4%;display:flex;align-items:center;
+ justify-content:space-between;gap:15px;flex-wrap:wrap
+}
+.logo{font-size:29px;font-weight:1000;letter-spacing:1px}
+.logo span{color:var(--y)}
+.clock{font-size:22px;font-weight:bold;font-variant-numeric:tabular-nums}
+.top{
+ max-width:1500px;margin:auto;padding:20px 25px;
+ display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap
+}
+h1{margin:0;font-size:clamp(25px,4vw,38px)}
+.subtitle{color:var(--muted);margin-top:7px}
+.status{color:var(--green);font-size:13px;font-weight:bold}
+.orders{
+ max-width:1500px;margin:auto;padding:0 25px 30px;
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px
+}
+.order{
+ background:var(--panel);border:2px solid var(--green);
+ border-radius:18px;overflow:hidden;text-align:center;
+ box-shadow:0 5px 20px #0006
+}
+.order-head{background:#163c28;padding:13px;color:#aaffca;font-size:13px;font-weight:900;letter-spacing:1px}
+.number{font-size:clamp(65px,8vw,100px);font-weight:1000;color:var(--y);padding:13px 8px 0;line-height:1.1}
+.service{
+ display:inline-block;border-radius:30px;padding:9px 17px;
+ background:#333;color:white;font-size:14px;font-weight:900;margin:12px
+}
+.service.takeaway{background:#594400;color:#ffe18a}
+.items{padding:12px 20px;text-align:left;border-top:1px solid #444}
+.item{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #383838;font-size:17px;font-weight:bold}
+.item:last-child{border:0}
+.qty{color:var(--y);font-size:20px;white-space:nowrap}
+.ready{background:var(--green);color:#06190e;padding:16px;font-size:19px;font-weight:1000;letter-spacing:1px}
+.elapsed{font-size:12px;color:#aaa;padding:10px}
+.welcome{
+ min-height:calc(100vh - 100px);display:flex;align-items:center;
+ justify-content:center;text-align:center;padding:25px;
+ background:radial-gradient(ellipse at center,#243020,#101010 70%)
+}
+.welcome-box{max-width:800px}
+.welcome-logo{font-size:clamp(40px,8vw,80px);font-weight:1000}
+.welcome-logo span{color:var(--y)}
+.welcome h1{font-size:clamp(28px,5vw,48px);margin:25px 0}
+.welcome p{font-size:19px;color:#bbb}
+.welcome-icon{font-size:90px}
+.footer{text-align:center;color:#666;padding:20px;font-size:12px}
+.empty{grid-column:1/-1;text-align:center;color:#aaa;padding:35px}
+@media(max-width:950px){.orders{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+ header{padding:14px}.logo{font-size:22px}
+ .orders{grid-template-columns:1fr;padding:0 13px 25px}
+ .top{padding:17px 13px}
+ .number{font-size:75px}
+}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo">KRYŠTOF <span>FOOD</span> | VÝDEJ</div>
+ <div class="clock" id="clock">00:00:00</div>
+</header>
+
+<div id="main">
+ <div class="top">
+  <div>
+   <h1>OBJEDNÁVKY K VYZVEDNUTÍ</h1>
+   <div class="subtitle">Sledujte číslo své objednávky.</div>
+  </div>
+  <div class="status">● VÝDEJNÍ OBRAZOVKA ONLINE</div>
+ </div>
+
+ <div id="orders" class="orders">
+  <div class="empty">Načítání objednávek...</div>
+ </div>
+</div>
+
+<div id="welcome" class="welcome" style="display:none">
+ <div class="welcome-box">
+  <div class="welcome-logo">KRYŠTOF <span>FOOD</span></div>
+  <div class="welcome-icon">🍔 🍟 🥤</div>
+  <h1>VÍTEJTE U KRYŠTOF FOOD!</h1>
+  <p>Vaše objednávka se zde zobrazí, jakmile bude připravena.</p>
+ </div>
+</div>
+
+<div class="footer">KRYŠTOF FOOD • DĚKUJEME ZA VAŠI NÁVŠTĚVU</div>
+
+<script>
+const API="/api/orders";
+let orders=[];
+
+function escapeHTML(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ })[c]);
+}
+
+function updateClock(){
+ document.getElementById("clock").textContent=
+ new Date().toLocaleTimeString("cs-CZ");
+}
+setInterval(updateClock,1000);
+updateClock();
+
+function duration(ms){
+ const s=Math.max(0,Math.floor(ms/1000));
+ const m=Math.floor(s/60);
+ const sec=s%60;
+ const h=Math.floor(m/60);
+ return [h,m%60,sec].map(x=>String(x).padStart(2,"0")).join(":");
+}
+
+function startTime(order){
+ if(order.createdAt){
+  const n=Number(order.createdAt);
+  if(Number.isFinite(n))return n;
+  const d=Date.parse(order.createdAt);
+  if(Number.isFinite(d))return d;
+ }
+ const key="kfood_pickup_"+order.number;
+ let saved=localStorage.getItem(key);
+ if(!saved){
+  saved=String(Date.now());
+  localStorage.setItem(key,saved);
+ }
+ return Number(saved);
+}
+
+function render(){
+ const ready=orders.filter(o=>o.ready).sort((a,b)=>Number(a.number)-Number(b.number));
+ const welcome=document.getElementById("welcome");
+ const main=document.getElementById("main");
+ const container=document.getElementById("orders");
+
+ if(ready.length===0){
+  main.style.display="none";
+  welcome.style.display="flex";
+  return;
+ }
+
+ main.style.display="block";
+ welcome.style.display="none";
+
+ container.innerHTML=ready.map(o=>{
+  const service=o.service||"Tady";
+  const takeaway=String(service).toLowerCase().includes("sebou");
+  const items=Array.isArray(o.items)?o.items:[];
+
+  return `<article class="order">
+   <div class="order-head">✓ OBJEDNÁVKA PŘIPRAVENA</div>
+   <div class="number">#${escapeHTML(o.number)}</div>
+   <div class="service ${takeaway?"takeaway":""}">
+    ${takeaway?"🛍️ S SEBOU":"🍽️ TADY"}
+   </div>
+   <div class="items">
+    ${items.map(i=>`<div class="item">
+     <span>${escapeHTML(i.name)}</span>
+     <span class="qty">× ${escapeHTML(i.qty)}</span>
+    </div>`).join("")}
+   </div>
+   <div class="ready">PŘIPRAVENO K VYZVEDNUTÍ</div>
+   <div class="elapsed">OBJEDNÁVKA VYTVOŘENA PŘED: <span data-timer="${escapeHTML(o.number)}">00:00:00</span></div>
+  </article>`;
+ }).join("");
+
+ updateTimers();
+}
+
+function updateTimers(){
+ document.querySelectorAll("[data-timer]").forEach(el=>{
+  const order=orders.find(o=>String(o.number)===el.dataset.timer);
+  if(order)el.textContent=duration(Date.now()-startTime(order));
+ });
+}
+
+async function loadOrders(){
+ try{
+  const response=await fetch(API+"?t="+Date.now(),{cache:"no-store"});
+  if(!response.ok)throw new Error("Server neodpovídá.");
+  const data=await response.json();
+  if(!Array.isArray(data))throw new Error("Chybná data objednávek.");
+  orders=data;
+  render();
+ }catch(e){
+  document.getElementById("main").style.display="block";
+  document.getElementById("welcome").style.display="none";
+  document.getElementById("orders").innerHTML=
+  `<div class="empty">⚠️ VÝDEJNÍ OBRAZOVKA NEMÁ SPOJENÍ SE SERVEREM.<br>${escapeHTML(e.message)}</div>`;
+ }
+}
+
+setInterval(loadOrders,2000);
+setInterval(updateTimers,1000);
+loadOrders();
+</script>
+</body>
+</html>

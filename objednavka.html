@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KRYŠTOF FOOD – Objednávky</title>
+<style>
+:root{--y:#ffc20a;--bg:#101010;--panel:#202020;--line:#383838;--green:#24c875}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:white;font-family:Arial,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+header{height:68px;background:#080808;border-bottom:4px solid var(--y);display:flex;align-items:center;justify-content:space-between;padding:0 5%;position:sticky;top:0;z-index:20}
+.logo{font-size:25px;font-weight:1000;letter-spacing:1px}
+.logo span{color:var(--y)}
+.header-right{font-size:12px;color:var(--green);font-weight:bold}
+.screen{display:none;min-height:calc(100vh - 68px)}
+.screen.active{display:block}
+.container{max-width:1300px;margin:auto;padding:25px 20px 115px}
+.btn{border:0;border-radius:12px;background:var(--y);color:#111;padding:15px 20px;font-weight:1000}
+.btn.dark{background:#333;color:white;border:1px solid #555}
+.btn.full{width:100%}
+.btn:disabled{opacity:.5}
+.center{text-align:center}
+.muted{color:#aaa}
+.welcome{min-height:calc(100vh - 68px);display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;background:radial-gradient(ellipse at center,#332600,#101010 70%)}
+.welcome-box{max-width:750px;width:100%}
+.biglogo{font-size:clamp(42px,9vw,85px);font-weight:1000}
+.biglogo span{color:var(--y)}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:35px}
+.choice button{min-height:130px;font-size:26px}
+.choice small{display:block;font-size:13px;margin-top:10px;opacity:.7}
+.hero{background:linear-gradient(110deg,#4b3700,#202020);border:1px solid #806000;border-radius:18px;padding:22px;display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:22px}
+.hero h2{margin:0 0 8px;color:var(--y)}
+.hero p{margin:0;color:#ccc}
+.hero-icon{font-size:60px}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+h1{font-size:32px;margin:8px 0}
+.search{background:#222;color:white;border:1px solid #555;border-radius:12px;padding:14px;width:min(100%,300px)}
+.categories{display:flex;gap:9px;overflow-x:auto;padding:17px 0}
+.cat{background:#282828;color:white;border:1px solid #444;border-radius:30px;padding:12px 18px;white-space:nowrap;font-weight:bold}
+.cat.active{background:var(--y);color:#111;border-color:var(--y)}
+.products{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.product{background:var(--panel);border:1px solid var(--line);border-radius:17px;overflow:hidden;display:flex;flex-direction:column}
+.product.combo{border-color:#806000}
+.product-image{height:135px;display:flex;align-items:center;justify-content:center;font-size:70px;background:linear-gradient(135deg,#353535,#171717)}
+.combo .product-image{background:linear-gradient(135deg,#493600,#191919)}
+.product-content{padding:14px;display:flex;flex-direction:column;flex:1}
+.product h3{margin:0 0 8px;font-size:18px}
+.product p{color:#aaa;font-size:13px;line-height:1.4;flex:1;margin:0 0 13px}
+.product-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.price{font-size:20px;color:var(--y);font-weight:1000}
+.add{border:0;border-radius:9px;background:var(--y);padding:11px 13px;font-weight:1000}
+.old{font-size:12px;color:#888;text-decoration:line-through}
+.saving{color:var(--green);font-size:12px;font-weight:bold;margin:5px 0}
+.cartbar{position:fixed;bottom:0;left:0;right:0;background:#080808;border-top:3px solid var(--y);padding:12px 5%;display:flex;align-items:center;justify-content:space-between;z-index:30}
+.cartbar strong{font-size:16px}
+.cartbar .small{color:var(--y);font-weight:bold;margin-top:4px}
+.count{background:var(--y);color:#111;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;width:23px;height:23px;font-size:12px;margin-left:5px}
+.back{border:0;background:none;color:var(--y);font-weight:bold;padding:0;margin-bottom:20px}
+.cart-list{display:grid;gap:12px;margin:20px 0}
+.cart-item{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.qty{display:flex;align-items:center;gap:12px}
+.qty button{border:0;background:var(--y);width:34px;height:34px;border-radius:9px;font-weight:bold;font-size:19px}
+.total{border-top:1px solid #444;padding-top:18px;display:flex;justify-content:space-between;font-size:23px;font-weight:1000}
+.checkout{max-width:650px;margin:25px auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:25px}
+.spinner{width:65px;height:65px;border:6px solid #444;border-top-color:var(--y);border-radius:50%;animation:spin .8s linear infinite;margin:25px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress{height:8px;background:#444;border-radius:20px;overflow:hidden;margin:25px 0}
+.progress div{height:100%;background:var(--y);width:0;animation:load 5s linear forwards}
+@keyframes load{to{width:100%}}
+.number{font-size:85px;color:var(--y);font-weight:1000;margin:15px}
+.success{font-size:75px;color:var(--green)}
+.empty{background:#202020;padding:35px;border-radius:15px;text-align:center;color:#aaa}
+@media(max-width:950px){.products{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){
+ header{height:60px;padding:0 14px}.logo{font-size:21px}
+ .container{padding:16px 12px 110px}
+ .products{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .product-image{height:105px;font-size:55px}
+ .product-content{padding:10px}.product h3{font-size:15px}
+ .product p{font-size:12px}.price{font-size:17px}
+ .add{padding:9px;font-size:12px}
+ .choice{grid-template-columns:1fr}
+ .choice button{min-height:90px}
+ .hero{padding:15px}.hero-icon{font-size:43px}
+ .cartbar{padding:10px 12px}
+}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo">KRYŠTOF <span>FOOD</span></div>
+ <div class="header-right">● OBJEDNÁVKY ONLINE</div>
+</header>
+
+<section id="welcome" class="screen active">
+ <div class="welcome">
+  <div class="welcome-box">
+   <div class="biglogo">KRYŠTOF <span>FOOD</span></div>
+   <h2>VÍTEJTE!</h2>
+   <p class="muted">Vyberte si, jak chcete objednávku.</p>
+   <div class="choice">
+    <button class="btn" onclick="startOrder('Tady')">🍽️ TADY<small>Jím na místě</small></button>
+    <button class="btn dark" onclick="startOrder('S sebou')">🛍️ S SEBOU<small>Odnáším si jídlo</small></button>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section id="menu" class="screen">
+ <div class="container">
+  <div class="hero">
+   <div><h2>⭐ VÝHODNÁ MENU</h2><p>Skvělé kombinace za výhodné ceny!</p></div>
+   <div class="hero-icon">🍔🍟🥤</div>
+  </div>
+  <div class="topline">
+   <div><h1>Vyberte si jídlo</h1><p class="muted" id="serviceLabel"></p></div>
+   <input id="search" class="search" placeholder="🔍 Hledat produkt..." oninput="renderProducts()">
+  </div>
+  <div class="categories" id="categories"></div>
+  <div class="products" id="products"></div>
+ </div>
+ <div class="cartbar">
+  <div><strong>🛒 KOŠÍK <span id="count" class="count">0</span></strong><div id="barTotal" class="small">0 Kč</div></div>
+  <button class="btn" onclick="openCart()">POKRAČOVAT →</button>
+ </div>
+</section>
+
+<section id="cartScreen" class="screen">
+ <div class="container">
+  <button class="back" onclick="show('menu')">← ZPĚT DO MENU</button>
+  <h1>Váš košík 🛒</h1>
+  <div id="cartList" class="cart-list"></div>
+  <div class="total"><span>CELKEM</span><span id="cartTotal" class="price">0 Kč</span></div>
+  <br><button class="btn full" onclick="checkout()">POKRAČOVAT K PLATBĚ →</button>
+ </div>
+</section>
+
+<section id="checkoutScreen" class="screen">
+ <div class="container">
+  <button class="back" onclick="show('cartScreen')">← ZPĚT</button>
+  <div class="checkout">
+   <h1 class="center">Kontrola objednávky</h1>
+   <div id="summary"></div>
+   <div class="total"><span>CELKEM</span><span id="checkoutTotal" class="price"></span></div>
+   <br><button id="sendButton" class="btn full" onclick="sendOrder()">POTVRDIT OBJEDNÁVKU</button>
+   <p class="muted center">Zkontrolujte objednávku před odesláním.</p>
+  </div>
+ </div>
+</section>
+
+<section id="sending" class="screen">
+ <div class="welcome"><div class="welcome-box center">
+  <div class="spinner"></div>
+  <h1>ODESÍLÁME OBJEDNÁVKU</h1>
+  <p class="muted">Prosíme, chvíli vyčkejte.</p>
+  <div class="progress"><div></div></div>
+  <p class="muted">Nevypínejte tuto stránku.</p>
+ </div></div>
+</section>
+
+<section id="success" class="screen">
+ <div class="welcome"><div class="welcome-box center">
+  <div class="success">✓</div>
+  <h1>OBJEDNÁVKA PŘIJATA!</h1>
+  <p class="muted">Vaše číslo objednávky:</p>
+  <div id="successNumber" class="number">101</div>
+  <h2 class="yellow" style="color:var(--y)">SLEDUJTE VÝDEJNÍ OBRAZOVKU</h2>
+  <p class="muted">Jakmile bude objednávka připravena, zobrazí se na výdeji.</p>
+  <br><button class="btn" onclick="newOrder()">NOVÁ OBJEDNÁVKA</button>
+ </div></div>
+</section>
+
+<script>
+const API="/api/orders";
+const products=[
+{id:1,name:"Hamburger",price:89,emoji:"🍔",cat:"Burgery",desc:"Šťavnaté maso v měkké housce."},
+{id:2,name:"Cheeseburger",price:99,emoji:"🍔",cat:"Burgery",desc:"Maso, sýr a lahodná omáčka."},
+{id:3,name:"Double Cheeseburger",price:129,emoji:"🍔",cat:"Burgery",desc:"Dvojitá porce masa a sýra."},
+{id:4,name:"Chicken Burger",price:109,emoji:"🍗",cat:"Burgery",desc:"Křupavé kuřecí maso."},
+{id:5,name:"Bacon Burger",price:139,emoji:"🥓",cat:"Burgery",desc:"Burger se slaninou a sýrem."},
+{id:6,name:"Malé hranolky",price:39,emoji:"🍟",cat:"Přílohy",desc:"Křupavé zlatavé hranolky."},
+{id:7,name:"Velké hranolky",price:59,emoji:"🍟",cat:"Přílohy",desc:"Velká porce hranolek."},
+{id:8,name:"6× Nuggets",price:79,emoji:"🍗",cat:"Přílohy",desc:"Šest kuřecích kousků."},
+{id:9,name:"9× Nuggets",price:109,emoji:"🍗",cat:"Přílohy",desc:"Devět kuřecích kousků."},
+{id:10,name:"Cibulové kroužky",price:59,emoji:"🧅",cat:"Přílohy",desc:"Křupavé cibulové kroužky."},
+{id:11,name:"Coca-Cola",price:39,emoji:"🥤",cat:"Nápoje",desc:"Osvěžující nápoj."},
+{id:12,name:"Fanta",price:39,emoji:"🥤",cat:"Nápoje",desc:"Ovocné osvěžení."},
+{id:13,name:"Sprite",price:39,emoji:"🥤",cat:"Nápoje",desc:"Citronovo-limetková chuť."},
+{id:14,name:"Ledový čaj",price:39,emoji:"🧋",cat:"Nápoje",desc:"Osvěžující ledový čaj."},
+{id:15,name:"Voda",price:29,emoji:"💧",cat:"Nápoje",desc:"Neperlivá voda."},
+{id:16,name:"Zmrzlina",price:39,emoji:"🍦",cat:"Dezerty",desc:"Sladká tečka na závěr."},
+{id:17,name:"Muffin",price:49,emoji:"🧁",cat:"Dezerty",desc:"Sladký muffin."},
+{id:18,name:"Cheesecake",price:69,emoji:"🍰",cat:"Dezerty",desc:"Krémový cheesecake."}
+];
+const combos=[
+{id:101,name:"Klasické menu",price:117,old:167,emoji:"🍔",cat:"Výhodná menu",desc:"Hamburger + malé hranolky + Coca-Cola"},
+{id:102,name:"Cheeseburger menu",price:127,old:177,emoji:"🍔",cat:"Výhodná menu",desc:"Cheeseburger + malé hranolky + Fanta"},
+{id:103,name:"Chicken menu",price:157,old:207,emoji:"🍗",cat:"Výhodná menu",desc:"Chicken Burger + velké hranolky + Sprite"},
+{id:104,name:"Double menu",price:157,old:207,emoji:"🍔",cat:"Výhodná menu",desc:"Double Cheeseburger + malé hranolky + Coca-Cola"}
+];
+const categories=["Vše","Výhodná menu","Burgery","Přílohy","Nápoje","Dezerty"];
+let cart=[],service="Tady",activeCategory="Vše",sending=false;
+
+function show(id){
+ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ window.scrollTo(0,0);
+}
+function startOrder(type){
+ service=type;cart=[];activeCategory="Vše";
+ document.getElementById("serviceLabel").textContent="Objednávka: "+type;
+ document.getElementById("search").value="";
+ renderCategories();renderProducts();updateCart();show("menu");
+}
+function renderCategories(){
+ document.getElementById("categories").innerHTML=categories.map(c=>
+ `<button class="cat ${c===activeCategory?"active":""}" onclick="chooseCategory('${c}')">${c}</button>`
+ ).join("");
+}
+function chooseCategory(c){activeCategory=c;renderCategories();renderProducts()}
+function renderProducts(){
+ const q=document.getElementById("search").value.toLowerCase();
+ const all=[...combos,...products];
+ const filtered=all.filter(p=>(activeCategory==="Vše"||p.cat===activeCategory)&&
+ (p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)));
+ document.getElementById("products").innerHTML=filtered.length?filtered.map(p=>{
+ const combo=!!p.old;
+ return `<article class="product ${combo?"combo":""}">
+ <div class="product-image">${p.emoji}</div>
+ <div class="product-content">
+ <h3>${p.name}</h3><p>${p.desc}</p>
+ ${combo?`<div class="old">${p.old} Kč</div><div class="saving">UŠETŘÍTE ${p.old-p.price} Kč</div>`:""}
+ <div class="product-bottom"><span class="price">${p.price} Kč</span>
+ <button class="add" onclick="add(${p.id})">+ PŘIDAT</button></div>
+ </div></article>`;
+ }).join(""):`<div class="empty">Nic jsme nenašli.</div>`;
+}
+function add(id){
+ const p=[...products,...combos].find(x=>x.id===id);
+ const item=cart.find(x=>x.id===id);
+ if(item)item.qty++;
+ else cart.push({id:p.id,name:p.name,price:p.price,qty:1});
+ updateCart();
+}
+function total(){return cart.reduce((s,x)=>s+x.price*x.qty,0)}
+function updateCart(){
+ document.getElementById("count").textContent=cart.reduce((s,x)=>s+x.qty,0);
+ document.getElementById("barTotal").textContent=total()+" Kč";
+}
+function openCart(){
+ if(!cart.length){alert("Nejdříve vyberte jídlo.");return}
+ renderCart();show("cartScreen");
+}
+function renderCart(){
+ document.getElementById("cartList").innerHTML=cart.map(x=>`
+ <div class="cart-item">
+ <div><strong>${x.name}</strong><br><span class="price">${x.price*x.qty} Kč</span></div>
+ <div class="qty">
+ <button onclick="changeQty(${x.id},-1)">−</button><strong>${x.qty}</strong>
+ <button onclick="changeQty(${x.id},1)">+</button>
+ </div></div>`).join("");
+ document.getElementById("cartTotal").textContent=total()+" Kč";
+ updateCart();
+}
+function changeQty(id,d){
+ const item=cart.find(x=>x.id===id);if(!item)return;
+ item.qty+=d;
+ if(item.qty<=0)cart=cart.filter(x=>x.id!==id);
+ if(!cart.length){show("menu")}else renderCart();
+ updateCart();
+}
+function checkout(){
+ if(!cart.length)return;
+ document.getElementById("summary").innerHTML=
+ `<p>Typ objednávky: <b>${service}</b></p>`+
+ cart.map(x=>`<p>${x.qty}× ${x.name} – ${x.price*x.qty} Kč</p>`).join("");
+ document.getElementById("checkoutTotal").textContent=total()+" Kč";
+ show("checkoutScreen");
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function sendOrder(){
+ if(sending||!cart.length)return;
+ sending=true;
+ const button=document.getElementById("sendButton");
+ button.disabled=true;
+ const started=Date.now();
+ show("sending");
+
+ try{
+  const nr=await fetch("/api/next-number",{method:"POST",cache:"no-store"});
+  if(!nr.ok)throw new Error("Nepodařilo se získat číslo objednávky.");
+  const nd=await nr.json();
+  if(!nd.success||!nd.number)throw new Error("Server nevrátil číslo objednávky.");
+
+  const response=await fetch(API+"?t="+Date.now(),{cache:"no-store"});
+  if(!response.ok)throw new Error("Nepodařilo se načíst objednávky.");
+  const orders=await response.json();
+  if(!Array.isArray(orders))throw new Error("Chybná data objednávek.");
+
+  const order={
+   number:Number(nd.number),
+   createdAt:Date.now(),
+   ready:false,
+   service:service,
+   items:cart.map(x=>({name:x.name,qty:x.qty})),
+   total:total()
+  };
+
+  const remaining=5000-(Date.now()-started);
+  if(remaining>0)await sleep(remaining);
+
+  const save=await fetch(API,{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify([...orders,order])
+  });
+  if(!save.ok)throw new Error("Objednávku se nepodařilo uložit.");
+  const result=await save.json();
+  if(!result.success)throw new Error("Server nepotvrdil objednávku.");
+
+  document.getElementById("successNumber").textContent=order.number;
+  show("success");
+ }catch(e){
+  alert("Chyba: "+e.message);
+  show("checkoutScreen");
+ }finally{
+  sending=false;
+  button.disabled=false;
+ }
+}
+function newOrder(){cart=[];updateCart();show("welcome")}
+renderCategories();renderProducts();updateCart();
+</script>
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,561 @@
+
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KRYŠTOF FOOD – KUCHYNĚ</title>
+
+<style>
+:root{
+ --yellow:#ffc20a;
+ --black:#101010;
+ --dark:#191919;
+ --card:#222;
+ --border:#383838;
+ --green:#24c875;
+ --red:#ed4141;
+ --orange:#ff982e;
+ --white:#fff;
+ --muted:#aaa;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;background:var(--black);color:white;
+ font-family:Arial,Helvetica,sans-serif;
+}
+header{
+ background:#080808;border-bottom:4px solid var(--yellow);
+ padding:15px 24px;display:flex;align-items:center;
+ justify-content:space-between;gap:15px;flex-wrap:wrap;
+ position:sticky;top:0;z-index:10;
+}
+.logo{font-size:27px;font-weight:1000;letter-spacing:1px}
+.logo span{color:var(--yellow)}
+.header-right{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.status{font-size:13px;color:var(--green);font-weight:bold}
+.clock{font-size:20px;font-weight:bold}
+main{max-width:1700px;margin:auto;padding:22px}
+.topbar{
+ display:flex;justify-content:space-between;align-items:center;
+ gap:15px;flex-wrap:wrap;margin-bottom:20px
+}
+h1{margin:0;font-size:30px}
+.subtitle{color:var(--muted);margin-top:6px;font-size:14px}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{
+ background:var(--dark);border:1px solid var(--border);
+ padding:13px 18px;border-radius:12px;min-width:115px
+}
+.stat strong{display:block;font-size:25px;color:var(--yellow)}
+.stat span{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}
+.tab{
+ background:#292929;color:white;border:1px solid #444;
+ padding:12px 20px;border-radius:9px;font-weight:bold;cursor:pointer
+}
+.tab.active{background:var(--yellow);color:#111;border-color:var(--yellow)}
+.orders{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:16px;align-items:start
+}
+.order{
+ background:var(--card);border:2px solid var(--border);
+ border-radius:15px;overflow:hidden;min-width:0
+}
+.order.waiting{border-color:var(--orange)}
+.order.old{border-color:var(--red)}
+.order.ready{border-color:var(--green)}
+.order-header{
+ background:#303030;padding:15px;
+ display:flex;justify-content:space-between;align-items:center;gap:10px
+}
+.order-number{font-size:29px;font-weight:1000;color:var(--yellow)}
+.order-age{
+ font-size:20px;font-weight:900;
+ background:#111;padding:8px 11px;border-radius:8px;
+ font-variant-numeric:tabular-nums
+}
+.age-label{font-size:10px;color:var(--muted);text-align:right;margin-top:4px}
+.order-info{
+ padding:11px 15px;border-bottom:1px solid #444;
+ display:flex;justify-content:space-between;gap:10px;
+ font-size:13px;color:#ccc
+}
+.service{color:var(--yellow);font-weight:bold}
+.items{padding:13px 15px}
+.item{
+ display:flex;justify-content:space-between;gap:10px;
+ padding:9px 0;border-bottom:1px solid #393939;
+ font-size:17px;font-weight:bold
+}
+.item:last-child{border-bottom:0}
+.item-qty{
+ color:var(--yellow);font-size:20px;white-space:nowrap
+}
+.order-total{
+ padding:12px 15px;border-top:1px solid #444;
+ display:flex;justify-content:space-between;font-weight:bold;
+ font-size:16px
+}
+.actions{padding:12px;display:grid;gap:9px}
+.btn{
+ border:0;border-radius:9px;padding:14px 10px;
+ font-weight:1000;font-size:14px;cursor:pointer
+}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-ready{background:var(--green);color:#06190e}
+.btn-confirm{background:var(--yellow);color:#111}
+.btn-delete{background:#393939;color:#ff7777;border:1px solid #666}
+.btn-cancel{background:#555;color:white}
+.confirm-box{
+ background:#4a3908;border:1px solid var(--yellow);
+ color:#ffe49b;padding:12px;border-radius:9px;
+ font-size:13px;text-align:center;line-height:1.5
+}
+.empty{
+ background:var(--dark);border:1px dashed #555;
+ border-radius:15px;padding:60px 20px;text-align:center;
+ color:var(--muted);grid-column:1/-1
+}
+.empty-icon{font-size:55px;margin-bottom:15px}
+.legend{display:flex;gap:15px;flex-wrap:wrap;color:#aaa;font-size:12px;margin:15px 0}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.footer{text-align:center;color:#666;font-size:12px;padding:25px}
+.sound-button{
+ background:#303030;color:white;border:1px solid #666;
+ border-radius:9px;padding:11px 14px;font-weight:bold;cursor:pointer
+}
+.sound-button.on{background:#174c31;border-color:var(--green);color:#8dffbb}
+@media(max-width:1100px){.orders{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){
+ header{padding:12px}
+ .logo{font-size:21px}
+ main{padding:13px}
+ .orders{grid-template-columns:1fr}
+ h1{font-size:24px}
+ .stat{min-width:95px;padding:10px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="logo">KRYŠTOF <span>FOOD</span> | KUCHYNĚ</div>
+ <div class="header-right">
+  <div class="status">● SERVER AKTIVNÍ</div>
+  <button id="soundButton" class="sound-button" onclick="enableSound()">🔇 ZAPNOUT ZVUK</button>
+  <div class="clock" id="clock">00:00:00</div>
+ </div>
+</header>
+
+<main>
+
+ <div class="topbar">
+  <div>
+   <h1>Objednávky kuchyně</h1>
+   <div class="subtitle">Přehled objednávek a jejich přípravy</div>
+  </div>
+
+  <div class="stats">
+   <div class="stat">
+    <strong id="statNew">0</strong>
+    <span>ČEKÁ NA PŘÍPRAVU</span>
+   </div>
+   <div class="stat">
+    <strong id="statReady">0</strong>
+    <span>NA VÝDEJI</span>
+   </div>
+   <div class="stat">
+    <strong id="statTotal">0</strong>
+    <span>CELKEM</span>
+   </div>
+  </div>
+ </div>
+
+ <div class="legend">
+  <span><i class="dot" style="background:var(--green)"></i>Čerstvá objednávka</span>
+  <span><i class="dot" style="background:var(--orange)"></i>Čeká déle než 5 minut</span>
+  <span><i class="dot" style="background:var(--red)"></i>Čeká déle než 10 minut</span>
+ </div>
+
+ <div class="tabs">
+  <button class="tab active" onclick="setTab('new',this)">🍔 NOVÉ OBJEDNÁVKY</button>
+  <button class="tab" onclick="setTab('ready',this)">✅ NA VÝDEJI</button>
+  <button class="tab" onclick="setTab('all',this)">📋 VŠECHNY</button>
+ </div>
+
+ <div id="orders" class="orders">
+  <div class="empty">Načítání objednávek...</div>
+ </div>
+
+</main>
+
+<div class="footer">KRYŠTOF FOOD • KUCHYŇSKÝ SYSTÉM</div>
+
+<script>
+const API="/api/orders";
+
+let orders=[];
+let currentTab="new";
+let soundEnabled=false;
+let knownNumbers=new Set();
+let confirming={};
+let audioContext=null;
+let firstLoad=true;
+
+/* ČAS */
+
+function getClock(){
+ return new Date().toLocaleTimeString("cs-CZ");
+}
+
+function updateClock(){
+ document.getElementById("clock").textContent=getClock();
+}
+setInterval(updateClock,1000);
+updateClock();
+
+function escapeHTML(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ })[c]);
+}
+
+function getStartTime(order){
+ if(order.createdAt){
+  const parsed=Number(order.createdAt);
+  if(Number.isFinite(parsed))return parsed;
+  const date=Date.parse(order.createdAt);
+  if(Number.isFinite(date))return date;
+ }
+
+ // U starších objednávek začne čas běžet při prvním zobrazení v kuchyni.
+ const key="kfood_start_"+order.number;
+ let stored=localStorage.getItem(key);
+
+ if(!stored){
+  stored=String(Date.now());
+  localStorage.setItem(key,stored);
+ }
+
+ return Number(stored);
+}
+
+function formatDuration(ms){
+ const seconds=Math.max(0,Math.floor(ms/1000));
+ const h=Math.floor(seconds/3600);
+ const m=Math.floor((seconds%3600)/60);
+ const s=seconds%60;
+
+ return [h,m,s].map(x=>String(x).padStart(2,"0")).join(":");
+}
+
+function ageClass(ms){
+ if(ms>=600000)return "old";
+ if(ms>=300000)return "waiting";
+ return "";
+}
+
+/* ZVUK */
+
+async function enableSound(){
+ try{
+  audioContext=new (window.AudioContext||window.webkitAudioContext)();
+  await audioContext.resume();
+  soundEnabled=true;
+
+  const button=document.getElementById("soundButton");
+  button.textContent="🔊 ZVUK ZAPNUT";
+  button.classList.add("on");
+  playTone(650,0.12);
+ }catch(e){
+  alert("Zvuk se nepodařilo zapnout.");
+ }
+}
+
+function playTone(frequency,duration){
+ if(!soundEnabled||!audioContext)return;
+
+ const oscillator=audioContext.createOscillator();
+ const gain=audioContext.createGain();
+
+ oscillator.connect(gain);
+ gain.connect(audioContext.destination);
+
+ oscillator.frequency.value=frequency;
+ gain.gain.setValueAtTime(0.12,audioContext.currentTime);
+ gain.gain.exponentialRampToValueAtTime(
+  0.001,audioContext.currentTime+duration
+ );
+
+ oscillator.start();
+ oscillator.stop(audioContext.currentTime+duration);
+}
+
+function newOrderSound(){
+ playTone(700,0.2);
+ setTimeout(()=>playTone(900,0.25),250);
+}
+
+/* OBJEDNÁVKY */
+
+async function loadOrders(){
+ try{
+  const response=await fetch(API+"?t="+Date.now(),{
+   cache:"no-store"
+  });
+
+  if(!response.ok)throw new Error("Server neodpovídá.");
+
+  const data=await response.json();
+  if(!Array.isArray(data))throw new Error("Neplatná data.");
+
+  orders=data;
+
+  const currentNumbers=new Set(
+   orders.map(o=>String(o.number))
+  );
+
+  if(!firstLoad){
+   const added=orders.filter(o=>
+    !knownNumbers.has(String(o.number))
+   );
+
+   if(added.length>0)newOrderSound();
+  }
+
+  knownNumbers=currentNumbers;
+  firstLoad=false;
+
+  render();
+
+ }catch(error){
+  document.getElementById("orders").innerHTML=
+   `<div class="empty">
+    <div class="empty-icon">⚠️</div>
+    <h2>SERVER NEDOSTUPNÝ</h2>
+    <p>${escapeHTML(error.message)}</p>
+    Zkontroluj, jestli běží propoj.py.
+   </div>`;
+ }
+}
+
+function getNewOrders(){
+ return orders.filter(o=>!o.ready);
+}
+
+function getReadyOrders(){
+ return orders.filter(o=>o.ready);
+}
+
+/* ZOBRAZENÍ */
+
+function setTab(tab,button){
+ currentTab=tab;
+
+ document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+ button.classList.add("active");
+
+ render();
+}
+
+function render(){
+ const fresh=getNewOrders();
+ const ready=getReadyOrders();
+
+ document.getElementById("statNew").textContent=fresh.length;
+ document.getElementById("statReady").textContent=ready.length;
+ document.getElementById("statTotal").textContent=orders.length;
+
+ let displayed=orders;
+
+ if(currentTab==="new")displayed=fresh;
+ if(currentTab==="ready")displayed=ready;
+
+ displayed=[...displayed].sort((a,b)=>
+  Number(a.number)-Number(b.number)
+ );
+
+ if(displayed.length===0){
+  const message=currentTab==="new"?
+   "Momentálně nejsou žádné nové objednávky.":
+   currentTab==="ready"?
+   "Na výdeji zatím nejsou žádné objednávky.":
+   "Zatím zde nejsou žádné objednávky.";
+
+  document.getElementById("orders").innerHTML=`
+   <div class="empty">
+    <div class="empty-icon">🍔</div>
+    <h2>VŠECHNO POD KONTROLOU</h2>
+    <p>${message}</p>
+   </div>`;
+  return;
+ }
+
+ document.getElementById("orders").innerHTML=
+ displayed.map(renderOrder).join("");
+}
+
+function renderOrder(order){
+ const number=escapeHTML(order.number);
+ const start=getStartTime(order);
+ const elapsed=Date.now()-start;
+ const statusClass=order.ready?"ready":ageClass(elapsed);
+
+ const items=Array.isArray(order.items)?order.items:[];
+
+ const itemHTML=items.map(item=>`
+  <div class="item">
+   <span>${escapeHTML(item.name)}</span>
+   <span class="item-qty">× ${escapeHTML(item.qty)}</span>
+  </div>
+ `).join("");
+
+ let actionHTML="";
+
+ if(!order.ready){
+  if(confirming[number]){
+   actionHTML=`
+    <div class="confirm-box">
+     OPRAVDU CHCEŠ ODESLAT OBJEDNÁVKU #${number} NA VÝDEJ?
+     <br>Ještě jednou potvrď.
+    </div>
+    <button class="btn btn-confirm" onclick="confirmReady('${number}')">
+     ✓ POTVRDIT A ODESLAT NA VÝDEJ
+    </button>
+    <button class="btn btn-cancel" onclick="cancelConfirm('${number}')">
+     ZRUŠIT
+    </button>`;
+  }else{
+   actionHTML=`
+    <button class="btn btn-ready" onclick="prepareReady('${number}')">
+     ✓ HOTOVO – 1. KLIKNUTÍ
+    </button>`;
+  }
+
+  actionHTML+=`
+   <button class="btn btn-delete" onclick="deleteOrder('${number}')">
+    🗑 SMAZAT OBJEDNÁVKU
+   </button>`;
+ }else{
+  actionHTML=`
+   <div class="confirm-box" style="background:#123a26;border-color:var(--green);color:#aaffce">
+    ✓ OBJEDNÁVKA JE NA VÝDEJI
+   </div>
+   <button class="btn btn-delete" onclick="deleteOrder('${number}')">
+    🗑 SMAZAT Z VÝDEJE
+   </button>`;
+ }
+
+ return `
+ <article class="order ${statusClass}">
+  <div class="order-header">
+   <div>
+    <div style="font-size:11px;color:#aaa">OBJEDNÁVKA</div>
+    <div class="order-number">#${number}</div>
+   </div>
+   <div>
+    <div class="order-age" data-timer="${number}">${formatDuration(elapsed)}</div>
+    <div class="age-label">ČAS ČEKÁNÍ</div>
+   </div>
+  </div>
+
+  <div class="order-info">
+   <span class="service">${escapeHTML(order.service||"Tady")}</span>
+   <span>${order.ready?"NA VÝDEJI":"V PŘÍPRAVĚ"}</span>
+  </div>
+
+  <div class="items">
+   ${itemHTML||"<p>Bez položek</p>"}
+  </div>
+
+  <div class="order-total">
+   <span>CELKEM</span>
+   <span class="yellow">${escapeHTML(order.total)} Kč</span>
+  </div>
+
+  <div class="actions">${actionHTML}</div>
+ </article>`;
+}
+
+/* DVOJITÉ POTVRZENÍ */
+
+function prepareReady(number){
+ confirming[number]=true;
+ render();
+}
+
+function cancelConfirm(number){
+ delete confirming[number];
+ render();
+}
+
+async function confirmReady(number){
+ const order=orders.find(o=>String(o.number)===String(number));
+ if(!order)return;
+
+ order.ready=true;
+ delete confirming[number];
+
+ await saveOrders();
+}
+
+/* MAZÁNÍ */
+
+async function deleteOrder(number){
+ if(!confirm("Opravdu chceš trvale smazat objednávku #"+number+"?")){
+  return;
+ }
+
+ orders=orders.filter(o=>String(o.number)!==String(number));
+ delete confirming[number];
+
+ await saveOrders();
+}
+
+/* UKLÁDÁNÍ */
+
+async function saveOrders(){
+ try{
+  const response=await fetch(API,{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify(orders)
+  });
+
+  if(!response.ok)throw new Error("Uložení se nezdařilo.");
+
+  const result=await response.json();
+  if(!result.success)throw new Error("Server nepotvrdil uložení.");
+
+  render();
+
+ }catch(error){
+  alert("CHYBA: "+error.message+"\nObjednávky se nepodařilo uložit.");
+  await loadOrders();
+ }
+}
+
+/* PRŮBĚŽNÝ ČAS */
+
+function updateTimers(){
+ document.querySelectorAll("[data-timer]").forEach(element=>{
+  const number=element.dataset.timer;
+  const order=orders.find(o=>String(o.number)===String(number));
+  if(!order)return;
+
+  element.textContent=formatDuration(Date.now()-getStartTime(order));
+ });
+}
+
+setInterval(updateTimers,1000);
+setInterval(loadOrders,2000);
+
+loadOrders();
+</script>
+
+</body>
+</html>
+
